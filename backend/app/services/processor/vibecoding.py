@@ -1,6 +1,6 @@
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
-from app.services.analyzer.claude import ClaudeAnalyzer
+from app.services.analyzer.gemini import GeminiAnalyzer
 from app.core.database import get_supabase_client
 
 
@@ -16,7 +16,7 @@ class VibeCodingProcessor:
     """Process VibeCoding agenda items"""
 
     def __init__(self):
-        self.analyzer = ClaudeAnalyzer()
+        self.analyzer = GeminiAnalyzer()
         self.client = get_supabase_client()
         self.agenda_name = "vibecoding"
 

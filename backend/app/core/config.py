@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     supabase_anon_key: str
     supabase_service_role_key: str
 
-    # Claude API
-    anthropic_api_key: str
+    # Gemini API
+    gemini_api_key: str
 
     # Scheduler
     scheduler_enabled: bool = True

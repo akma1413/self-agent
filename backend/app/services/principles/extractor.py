@@ -1,5 +1,5 @@
 from typing import List, Dict, Any
-from anthropic import Anthropic
+import google.generativeai as genai
 from app.core.config import get_settings
 from app.schemas.principles import PrincipleCreate
 
@@ -39,7 +39,8 @@ class PrincipleExtractor:
 
     def __init__(self):
         settings = get_settings()
-        self.client = Anthropic(api_key=settings.anthropic_api_key)
+        genai.configure(api_key=settings.gemini_api_key)
+        self.model = genai.GenerativeModel("gemini-2.0-flash")
 
     async def extract_from_conversations(
         self, conversations: List[Dict[str, Any]]
@@ -71,13 +72,22 @@ class PrincipleExtractor:
         prompt = EXTRACTION_PROMPT.format(conversation=content)
 
         try:
-            response = self.client.messages.create(
-                model="claude-sonnet-4-20250514",
-                max_tokens=2000,
-                messages=[{"role": "user", "content": prompt}],
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=2000,
+                ),
             )
 
-            result_text = response.content[0].text.strip()
+            result_text = response.text.strip()
+            # Clean up response - Gemini sometimes wraps JSON in markdown
+            if result_text.startswith("```json"):
+                result_text = result_text[7:]
+            if result_text.startswith("```"):
+                result_text = result_text[3:]
+            if result_text.endswith("```"):
+                result_text = result_text[:-3]
+            result_text = result_text.strip()
             principles_data = json.loads(result_text)
 
             return [

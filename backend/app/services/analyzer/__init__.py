@@ -1,6 +1,6 @@
 # Analyzer service
 # Analyzes collected data and generates insights
 
-from app.services.analyzer.claude import ClaudeAnalyzer
+from app.services.analyzer.gemini import GeminiAnalyzer
 
-__all__ = ["ClaudeAnalyzer"]
+__all__ = ["GeminiAnalyzer"]
