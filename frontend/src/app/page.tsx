@@ -1,0 +1,206 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import { Header } from '@/components/layout/header';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FileText, CheckSquare, Brain, Play, TrendingUp } from 'lucide-react';
+import { api } from '@/lib/api';
+import Link from 'next/link';
+
+interface SummaryData {
+  pendingReports: number;
+  pendingActions: number;
+  activePrinciples: number;
+}
+
+export default function Home() {
+  const [summary, setSummary] = useState<SummaryData>({
+    pendingReports: 0,
+    pendingActions: 0,
+    activePrinciples: 0,
+  });
+  const [recentReports, setRecentReports] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [reports, actions, principles] = await Promise.all([
+          api.getPendingReports(),
+          api.getPendingActions(),
+          api.getPrinciples(),
+        ]);
+
+        setSummary({
+          pendingReports: reports.length,
+          pendingActions: actions.length,
+          activePrinciples: principles.length,
+        });
+
+        const allReports = await api.getReports();
+        setRecentReports(allReports.slice(0, 5));
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  const handleTriggerProcess = async () => {
+    try {
+      await api.triggerProcess();
+      alert('분석 프로세스가 시작되었습니다.');
+    } catch (error) {
+      console.error('Failed to trigger process:', error);
+      alert('프로세스 시작에 실패했습니다.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <>
+        <Header title="대시보드" />
+        <div className="flex h-screen items-center justify-center">
+          <div className="text-slate-600 dark:text-slate-400">로딩 중...</div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Header title="대시보드" />
+      <div className="p-6 space-y-6">
+        {/* Summary Cards */}
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card>
+            <CardContent className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  대기 중인 리포트
+                </p>
+                <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  {summary.pendingReports}
+                </p>
+              </div>
+              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  대기 중인 액션
+                </p>
+                <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  {summary.pendingActions}
+                </p>
+              </div>
+              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/30">
+                <CheckSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
+                  활성 원칙
+                </p>
+                <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
+                  {summary.activePrinciples}
+                </p>
+              </div>
+              <div className="rounded-full bg-amber-100 p-3 dark:bg-amber-900/30">
+                <Brain className="h-6 w-6 text-amber-600 dark:text-amber-400" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>빠른 작업</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3">
+              <Button onClick={handleTriggerProcess}>
+                <Play className="mr-2 h-4 w-4" />
+                분석 프로세스 시작
+              </Button>
+              <Link href="/reports">
+                <Button variant="secondary">
+                  <FileText className="mr-2 h-4 w-4" />
+                  리포트 보기
+                </Button>
+              </Link>
+              <Link href="/actions">
+                <Button variant="secondary">
+                  <CheckSquare className="mr-2 h-4 w-4" />
+                  액션 검토
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Recent Reports */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>최근 리포트</CardTitle>
+              <Link href="/reports">
+                <Button variant="ghost" size="sm">
+                  전체 보기
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {recentReports.length === 0 ? (
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                아직 리포트가 없습니다.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {recentReports.map((report) => (
+                  <Link key={report.id} href={`/reports/${report.id}`}>
+                    <div className="flex items-start justify-between rounded-lg border border-slate-200 p-4 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="font-medium text-slate-900 dark:text-slate-50">
+                            {report.title}
+                          </h4>
+                          <Badge variant={report.status === 'pending' ? 'warning' : 'default'}>
+                            {report.status === 'pending' ? '대기' : '검토완료'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                          {report.summary}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-500 dark:text-slate-500">
+                          {new Date(report.created_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      </div>
+                      <TrendingUp className="ml-4 h-5 w-5 text-slate-400" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </>
+  );
+}
