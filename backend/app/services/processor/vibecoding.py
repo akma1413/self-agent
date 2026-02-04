@@ -1,19 +1,22 @@
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
+import logging
+
 from app.services.analyzer.gemini import GeminiAnalyzer
 from app.core.database import get_supabase_client
 
-
-# User's current stack for comparison
-CURRENT_STACK = {
-    "terminal": "Ghostty",
-    "harness": "Claude Code",
-    "orchestrator": "OMC (oh-my-claudecode)",
-}
+logger = logging.getLogger(__name__)
 
 
 class VibeCodingProcessor:
     """Process VibeCoding agenda items"""
+
+    # Default stack (fallback if DB fails)
+    DEFAULT_STACK = {
+        "terminal": "Ghostty",
+        "harness": "Claude Code",
+        "orchestrator": "OMC (oh-my-claudecode)"
+    }
 
     def __init__(self):
         self.analyzer = GeminiAnalyzer()
@@ -57,12 +60,13 @@ class VibeCodingProcessor:
         if not source_ids:
             return []
 
-        # Get unprocessed collected items
+        # Get unprocessed collected items (excluding filtered_out)
         items = (
             self.client.table("collected_items")
             .select("*")
             .in_("source_id", source_ids)
             .is_("processed_at", "null")
+            .eq("filtered_out", False)
             .order("collected_at", desc=True)
             .limit(50)
             .execute()
@@ -83,6 +87,20 @@ class VibeCodingProcessor:
 
         return [p["content"] for p in principles.data]
 
+    async def _get_current_stack(self) -> Dict[str, str]:
+        """
+        Load user stack from database.
+        Falls back to DEFAULT_STACK on error.
+        """
+        try:
+            result = self.client.table("user_stack").select("category, tool_name").execute()
+            if result.data:
+                return {row["category"]: row["tool_name"] for row in result.data}
+            return self.DEFAULT_STACK
+        except Exception as e:
+            logger.warning(f"Failed to load user stack from DB: {e}, using defaults")
+            return self.DEFAULT_STACK
+
     async def _process_single_item(
         self, item: Dict[str, Any], principles: List[str]
     ) -> Dict[str, Any]:
@@ -94,10 +112,12 @@ class VibeCodingProcessor:
             "metadata": item.get("metadata", {}),
         }
 
+        current_stack = await self._get_current_stack()
+
         analysis = await self.analyzer.analyze_new_tool(
             tool_info=tool_info,
             user_principles=principles,
-            current_stack=CURRENT_STACK,
+            current_stack=current_stack,
         )
 
         return {
@@ -116,10 +136,12 @@ class VibeCodingProcessor:
         self, category: str
     ) -> Dict[str, Any]:
         """Generate comparison report for a category (terminal, harness, orchestrator)"""
-        if category not in CURRENT_STACK:
+        current_stack = await self._get_current_stack()
+
+        if category not in current_stack:
             raise ValueError(f"Unknown category: {category}")
 
-        current_tool = CURRENT_STACK[category]
+        current_tool = current_stack[category]
         principles = await self._get_user_principles()
 
         # Get recent items related to this category

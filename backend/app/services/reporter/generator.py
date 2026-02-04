@@ -128,13 +128,20 @@ class ReportGenerator:
         """Create recommended actions based on analysis"""
         recommendation = analysis.get("recommendation", "consider")
 
+        # Extract source item for payload generation
+        source_item = report.get("content", {})
+
         if recommendation == "recommend":
+            # Create action with payload if migration_guide exists
+            payload = self._create_action_payload(analysis, source_item)
+
             await self._create_action(
                 report_id=report["id"],
-                action_type="try",
+                action_type="install" if payload else "try",
                 title=f"새 도구 사용해보기",
                 description=analysis.get("summary"),
                 priority="high",
+                payload=payload,
             )
         elif recommendation == "consider":
             await self._create_action(
@@ -159,6 +166,44 @@ class ReportGenerator:
             priority="high" if analysis.get("confidence", 0) > 0.8 else "medium",
         )
 
+    def _create_action_payload(
+        self, analysis: Dict[str, Any], source_item: Dict[str, Any]
+    ) -> Dict[str, Any] | None:
+        """
+        Create Action payload from LLM analysis.
+
+        Extracts execution details from migration_guide and usage_guide
+        (available when TODO 1.1 is implemented).
+
+        Payload structure:
+        - tool: Tool name
+        - install_command: Installation command
+        - post_install: Post-installation steps
+        - rollback_command: How to rollback
+        - documentation_url: Official docs
+        - estimated_time: Time estimate
+        - difficulty: Easy/Medium/Hard
+        """
+        migration = analysis.get("migration_guide", {})
+        usage = analysis.get("usage_guide", {})
+
+        # If no migration guide, return None (not ready for execution)
+        if not migration:
+            return None
+
+        steps = migration.get("steps", [])
+        first_step = steps[0] if steps else {}
+
+        return {
+            "tool": source_item.get("tool_name", ""),
+            "install_command": first_step.get("action", ""),
+            "post_install": usage.get("getting_started", []),
+            "rollback_command": migration.get("rollback", ""),
+            "documentation_url": source_item.get("source_url", ""),
+            "estimated_time": migration.get("estimated_time", ""),
+            "difficulty": migration.get("difficulty", "MEDIUM"),
+        }
+
     async def _create_action(
         self,
         report_id: str,
@@ -166,6 +211,7 @@ class ReportGenerator:
         title: str,
         description: str | None = None,
         priority: str = "medium",
+        payload: Dict[str, Any] | None = None,
     ):
         """Create a single action"""
         action_data = {
@@ -174,6 +220,7 @@ class ReportGenerator:
             "title": title,
             "description": description,
             "priority": priority,
+            "payload": payload,
         }
 
         self.client.table("actions").insert(action_data).execute()

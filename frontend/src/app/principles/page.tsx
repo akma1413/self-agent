@@ -230,7 +230,16 @@ export default function PrinciplesPage() {
                       <Edit className="mr-1 h-3 w-3" />
                       수정
                     </Button>
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={async () => {
+                      if (confirm(`"${principle.content || principle.title}" 원칙을 삭제하시겠습니까?`)) {
+                        try {
+                          await api.deletePrinciple(principle.id);
+                          setPrinciples(prev => prev.filter(p => p.id !== principle.id));
+                        } catch (e) {
+                          alert('삭제 중 오류가 발생했습니다.');
+                        }
+                      }
+                    }}>
                       <Trash2 className="mr-1 h-3 w-3" />
                       삭제
                     </Button>

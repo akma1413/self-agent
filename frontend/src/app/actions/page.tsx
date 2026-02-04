@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { api } from '@/lib/api';
+import { ActionGuide } from '@/components/ActionGuide';
 
 export default function ActionsPage() {
   const [actions, setActions] = useState<any[]>([]);
@@ -14,6 +15,7 @@ export default function ActionsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedAction, setSelectedAction] = useState<any>(null);
   const [comment, setComment] = useState('');
+  const [confirmedAction, setConfirmedAction] = useState<any>(null);
 
   useEffect(() => {
     fetchActions();
@@ -34,7 +36,8 @@ export default function ActionsPage() {
   const handleConfirm = async (actionId: string) => {
     try {
       await api.confirmAction(actionId, comment);
-      alert('액션이 확인되었습니다.');
+      // Show action guide instead of alert
+      setConfirmedAction(selectedAction);
       setSelectedAction(null);
       setComment('');
       fetchActions();
@@ -294,6 +297,29 @@ export default function ActionsPage() {
                   확인
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Action Guide Modal */}
+      {confirmedAction && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto m-4">
+            <CardHeader>
+              <CardTitle>{confirmedAction.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActionGuide
+                guide={confirmedAction.payload || {}}
+                onComplete={() => {
+                  setConfirmedAction(null);
+                }}
+                onReportIssue={() => {
+                  alert('문제 신고 기능은 곧 추가됩니다.');
+                  setConfirmedAction(null);
+                }}
+              />
             </CardContent>
           </Card>
         </div>

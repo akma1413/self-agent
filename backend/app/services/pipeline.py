@@ -7,6 +7,7 @@ from app.services.collector.manager import CollectorManager
 from app.services.processor.vibecoding import VibeCodingProcessor
 from app.services.reporter.generator import ReportGenerator
 from app.services.executor.notification import NotificationExecutor
+from app.services.quality import QualityScorer
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,45 @@ class Pipeline:
         self.processor = VibeCodingProcessor()
         self.reporter = ReportGenerator()
         self.notifier = NotificationExecutor()
+        self.quality_scorer = QualityScorer()
+
+    async def _filter_by_quality(
+        self, items: List[Dict], agenda: Dict | None = None
+    ) -> List[Dict]:
+        """
+        Filter collected items by quality score.
+        Updates DB with scores and returns items above threshold.
+        """
+        if not items:
+            return []
+
+        # Get sources for reputation info
+        source_ids = list(set(item.get("source_id") for item in items if item.get("source_id")))
+        sources = {}
+        if source_ids:
+            result = self.client.table("sources").select("*").in_("id", source_ids).execute()
+            sources = {s["id"]: s for s in result.data}
+
+        filtered_items = []
+        for item in items:
+            source = sources.get(item.get("source_id"), {})
+            result = self.quality_scorer.score(item, source, agenda)
+
+            # Update DB with score
+            self.client.table("collected_items").update({
+                "quality_score": result.score,
+                "quality_breakdown": result.breakdown,
+                "filtered_out": not result.should_process
+            }).eq("id", item["id"]).execute()
+
+            if result.should_process:
+                filtered_items.append(item)
+
+        logger.info(
+            f"Quality filter: {len(filtered_items)}/{len(items)} passed "
+            f"(threshold: {self.quality_scorer.DEFAULT_THRESHOLD})"
+        )
+        return filtered_items
 
     async def run_full_pipeline(self, agenda_id: str | None = None) -> Dict[str, Any]:
         """Run the complete pipeline"""
@@ -36,6 +76,31 @@ class Pipeline:
             results["steps"]["collect"] = {
                 "success": True,
                 "results": collection_results,
+            }
+
+            # Step 1.5: Quality filtering on newly collected items
+            logger.info("Applying quality filter to newly collected items...")
+            agenda = None
+            if agenda_id:
+                agenda_result = self.client.table("agendas").select("*").eq("id", agenda_id).single().execute()
+                agenda = agenda_result.data if agenda_result.data else None
+
+            # Get newly collected items (no quality_score yet)
+            newly_collected = (
+                self.client.table("collected_items")
+                .select("*")
+                .is_("quality_score", "null")
+                .order("collected_at", desc=True)
+                .limit(200)
+                .execute()
+            )
+
+            filtered_items = await self._filter_by_quality(newly_collected.data, agenda)
+            results["steps"]["quality_filter"] = {
+                "success": True,
+                "total_items": len(newly_collected.data),
+                "passed_items": len(filtered_items),
+                "filtered_out": len(newly_collected.data) - len(filtered_items),
             }
         except Exception as e:
             logger.error(f"Collection failed: {e}")

@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Gemini API
     gemini_api_key: str
 
+    # RapidAPI (for Twitter)
+    rapidapi_key: str | None = None
+
     # Scheduler
     scheduler_enabled: bool = True
 

@@ -26,6 +26,7 @@ export const api = {
   getPendingReports: () => fetchAPI<any[]>('/reports/pending'),
   getReport: (id: string) => fetchAPI<any>(`/reports/${id}`),
   reviewReport: (id: string) => fetchAPI<any>(`/reports/${id}/review`, { method: 'POST' }),
+  archiveReport: (id: string) => fetchAPI<any>(`/reports/${id}/archive`, { method: 'POST' }),
 
   // Actions
   getActions: (status?: string) => fetchAPI<any[]>(`/actions${status ? `?status=${status}` : ''}`),
@@ -43,6 +44,11 @@ export const api = {
 
   // Principles
   getPrinciples: () => fetchAPI<any[]>('/principles'),
+  getPrinciple: (id: string) => fetchAPI<any>(`/principles/${id}`),
+  updatePrinciple: (id: string, data: { content?: string; category?: string; confidence_score?: number }) =>
+    fetchAPI<any>(`/principles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+  deletePrinciple: (id: string) =>
+    fetchAPI<any>(`/principles/${id}`, { method: 'DELETE' }),
 
   // Process
   triggerProcess: () => fetchAPI<any>('/process/vibecoding/process', { method: 'POST' }),

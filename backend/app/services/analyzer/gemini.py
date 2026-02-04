@@ -39,7 +39,8 @@ class GeminiAnalyzer:
     ) -> Dict[str, Any]:
         """Analyze a new tool against user principles and current stack"""
 
-        prompt = f'''Analyze this new AI coding tool/feature:
+        prompt = f'''당신은 AI 코딩 도구 전문 분석가입니다.
+사용자가 이 도구를 채택해야 할지 "판단만 하면 되는" 형태로 분석하세요.
 
 TOOL INFO:
 {json.dumps(tool_info, indent=2, ensure_ascii=False)}
@@ -50,20 +51,41 @@ USER'S PRINCIPLES:
 CURRENT STACK:
 {json.dumps(current_stack, indent=2, ensure_ascii=False)}
 
-Analyze:
-1. How does this align with user's principles? (principle_alignment)
-2. Does it improve on current stack? (stack_comparison)
-3. Recommendation (recommend/consider/skip)
-4. Key benefits and drawbacks
-
-Output as JSON:
+다음 JSON 형식으로 분석하세요:
 {{
-  "recommendation": "recommend|consider|skip",
-  "principle_alignment": {{"aligned": ["principles..."], "conflicting": ["principles..."]}},
-  "stack_comparison": {{"replaces": "tool_name or null", "complements": ["tools..."], "improvement_areas": ["areas..."]}},
-  "benefits": ["benefit1", "benefit2"],
-  "drawbacks": ["drawback1"],
-  "summary": "2-3 sentence summary in Korean"
+  "summary": "한 문장 요약 (한국어)",
+  "verdict": "ADOPT | CONSIDER | SKIP",
+  "confidence": 0.0-1.0,
+
+  "difference_from_current": {{
+    "what_changes": "현재 도구 → 새 도구 변경 요약",
+    "breaking_changes": ["호환 안되는 변경사항"],
+    "compatible": ["그대로 사용 가능한 것들"]
+  }},
+
+  "benefits_if_adopted": [
+    {{"benefit": "이점 이름", "impact": "HIGH|MEDIUM|LOW", "why": "왜 이점인지"}}
+  ],
+
+  "migration_guide": {{
+    "estimated_time": "예상 소요 시간 (예: 30분)",
+    "difficulty": "EASY | MEDIUM | HARD",
+    "steps": [
+      {{"step": 1, "action": "실행할 명령어/행동", "note": "참고사항"}}
+    ],
+    "rollback": "문제 시 원복 방법"
+  }},
+
+  "usage_guide": {{
+    "getting_started": ["시작하기 단계들"],
+    "key_features": ["핵심 기능 사용법"],
+    "tips": ["활용 팁"]
+  }},
+
+  "decision_factors": {{
+    "adopt_if": ["이런 경우 채택하세요"],
+    "skip_if": ["이런 경우 스킵하세요"]
+  }}
 }}'''
 
         result = await self.analyze(prompt)

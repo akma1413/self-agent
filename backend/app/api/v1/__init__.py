@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import agendas, reports, actions, principles, conversations, sources, process, pipeline
+from app.api.v1.endpoints import agendas, reports, actions, principles, conversations, sources, process, pipeline, stack
 
 router = APIRouter()
 
@@ -14,3 +14,4 @@ router.include_router(
 router.include_router(sources.router, prefix="/sources", tags=["sources"])
 router.include_router(process.router, prefix="/process", tags=["process"])
 router.include_router(pipeline.router, prefix="/pipeline", tags=["pipeline"])
+router.include_router(stack.router, prefix="/stack", tags=["stack"])

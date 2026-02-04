@@ -42,6 +42,7 @@ class ActionCreate(BaseModel):
     title: str
     description: Optional[str] = None
     priority: str = "medium"
+    payload: Optional[dict] = None
 
 
 class ActionResponse(BaseModel):
@@ -52,6 +53,7 @@ class ActionResponse(BaseModel):
     description: Optional[str]
     priority: str
     status: str
+    payload: Optional[dict]
     confirmed_at: Optional[datetime]
     executed_at: Optional[datetime]
     created_at: datetime

@@ -3,6 +3,7 @@ from app.services.collector.base import AbstractCollector, CollectedItem
 from app.services.collector.rss import RSSCollector
 from app.services.collector.web import WebCollector
 from app.services.collector.github import GitHubCollector
+from app.services.collector.twitter import TwitterCollector
 from app.core.database import get_supabase_client
 
 
@@ -10,6 +11,7 @@ COLLECTOR_REGISTRY: Dict[str, Type[AbstractCollector]] = {
     "rss": RSSCollector,
     "web": WebCollector,
     "github": GitHubCollector,
+    "twitter": TwitterCollector,
 }
 
 
@@ -71,6 +73,8 @@ class CollectorManager:
                 source["config"].get("repo", source["url"]),
                 source.get("config"),
             )
+        elif source_type == "twitter":
+            collector = collector_class(source["id"], source.get("config"))
         else:
             collector = collector_class(source["id"], source["url"], source.get("config"))
 
