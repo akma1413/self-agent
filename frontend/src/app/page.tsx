@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { MetricCard } from '@/components/ui/metric-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, CheckSquare, Brain, Play, TrendingUp } from 'lucide-react';
@@ -74,57 +75,38 @@ export default function Home() {
 
   return (
     <>
-      <Header title="대시보드" />
-      <div className="p-6 space-y-6">
-        {/* Summary Cards */}
+      <Header title="Dashboard" />
+      <div className="p-8 space-y-8">
+        {/* Page Title */}
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-50 font-serif">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Welcome back. Here&apos;s what&apos;s happening.
+          </p>
+        </div>
+
+        {/* Metric Cards */}
         <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  대기 중인 리포트
-                </p>
-                <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
-                  {summary.pendingReports}
-                </p>
-              </div>
-              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
-                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  대기 중인 액션
-                </p>
-                <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
-                  {summary.pendingActions}
-                </p>
-              </div>
-              <div className="rounded-full bg-green-100 p-3 dark:bg-green-900/30">
-                <CheckSquare className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  활성 원칙
-                </p>
-                <p className="mt-2 text-3xl font-bold text-slate-900 dark:text-slate-50">
-                  {summary.activePrinciples}
-                </p>
-              </div>
-              <div className="rounded-full bg-amber-100 p-3 dark:bg-amber-900/30">
-                <Brain className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-              </div>
-            </CardContent>
-          </Card>
+          <MetricCard
+            number="01"
+            label="Reports"
+            value={summary.pendingReports}
+            trend={{ value: '+12%', direction: 'up' }}
+          />
+          <MetricCard
+            number="02"
+            label="Pending Actions"
+            value={summary.pendingActions}
+            trend={{ value: 'needs review', direction: 'neutral' }}
+          />
+          <MetricCard
+            number="03"
+            label="Principles"
+            value={summary.activePrinciples}
+            trend={{ value: '-2 this week', direction: 'down' }}
+          />
         </div>
 
         {/* Quick Actions */}

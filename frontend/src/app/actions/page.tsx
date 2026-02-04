@@ -5,7 +5,9 @@ import { Header } from '@/components/layout/header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Drawer } from '@/components/ui/drawer';
+import { FilterTabs } from '@/components/ui/filter-tabs';
+import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { ActionGuide } from '@/components/ActionGuide';
 
@@ -123,43 +125,33 @@ export default function ActionsPage() {
     );
   }
 
+  const filterTabs = [
+    { id: 'all', label: 'All' },
+    { id: 'pending', label: 'Pending' },
+    { id: 'confirmed', label: 'Confirmed' },
+    { id: 'rejected', label: 'Rejected' },
+  ];
+
   return (
     <>
-      <Header title="액션" />
-      <div className="p-6 space-y-6">
-        {/* Filters */}
-        <Card>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button
-              variant={filter === 'all' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setFilter('all')}
-            >
-              전체
-            </Button>
-            <Button
-              variant={filter === 'pending' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setFilter('pending')}
-            >
-              대기 중
-            </Button>
-            <Button
-              variant={filter === 'confirmed' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setFilter('confirmed')}
-            >
-              확인됨
-            </Button>
-            <Button
-              variant={filter === 'rejected' ? 'primary' : 'ghost'}
-              size="sm"
-              onClick={() => setFilter('rejected')}
-            >
-              거부됨
-            </Button>
-          </CardContent>
-        </Card>
+      <Header title="Actions" />
+      <div className="p-8 space-y-6">
+        {/* Page Title */}
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-50 font-serif">
+            Actions
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            Review and execute recommended actions
+          </p>
+        </div>
+
+        {/* Filter Tabs */}
+        <FilterTabs
+          tabs={filterTabs}
+          activeTab={filter}
+          onTabChange={setFilter}
+        />
 
         {/* Actions List */}
         {actions.length === 0 ? (
@@ -259,48 +251,72 @@ export default function ActionsPage() {
         )}
       </div>
 
-      {/* Confirmation Modal */}
-      {selectedAction && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <Card className="w-full max-w-md m-4">
-            <CardHeader>
-              <CardTitle>액션 검토</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+      {/* Action Detail Drawer */}
+      <Drawer
+        isOpen={!!selectedAction}
+        onClose={() => {
+          setSelectedAction(null);
+          setComment('');
+        }}
+        title="Action Details"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => handleReject(selectedAction?.id)}
+            >
+              Reject
+            </Button>
+            <Button onClick={() => handleConfirm(selectedAction?.id)}>
+              Confirm
+            </Button>
+          </>
+        }
+      >
+        {selectedAction && (
+          <div className="space-y-6">
+            <div>
+              <label className="text-xs text-slate-500 dark:text-slate-400">Title</label>
+              <p className="mt-1 text-base font-medium text-slate-900 dark:text-slate-50">
                 {selectedAction.title}
               </p>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 dark:text-slate-400">Description</label>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">
+                {selectedAction.description}
+              </p>
+            </div>
+            {selectedAction.payload && (
+              <div>
+                <label className="text-xs text-slate-500 dark:text-slate-400">Execution Guide</label>
+                <div className="mt-2 space-y-2">
+                  {selectedAction.payload.steps?.map((step: string, idx: number) => (
+                    <div key={idx} className="flex gap-3">
+                      <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+                        {idx + 1}.
+                      </span>
+                      <span className="text-sm text-slate-600 dark:text-slate-300">{step}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div>
+              <label className="text-xs text-slate-500 dark:text-slate-400 block mb-2">
+                Comment (optional)
+              </label>
               <textarea
-                placeholder="코멘트를 입력하세요 (선택사항)"
+                placeholder="Add a comment..."
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white p-3 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
-                rows={4}
+                className="w-full border border-slate-200 bg-white p-3 text-sm text-slate-900 focus:border-slate-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                rows={3}
               />
-              <div className="mt-4 flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setSelectedAction(null);
-                    setComment('');
-                  }}
-                >
-                  취소
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => handleReject(selectedAction.id)}
-                >
-                  거부
-                </Button>
-                <Button onClick={() => handleConfirm(selectedAction.id)}>
-                  확인
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+            </div>
+          </div>
+        )}
+      </Drawer>
 
       {/* Action Guide Modal */}
       {confirmedAction && (

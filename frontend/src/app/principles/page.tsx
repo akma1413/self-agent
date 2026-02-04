@@ -2,16 +2,18 @@
 
 import React, { useEffect, useState } from 'react';
 import { Header } from '@/components/layout/header';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Brain, TrendingUp, Edit, Trash2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Brain, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function PrinciplesPage() {
   const [principles, setPrinciples] = useState<any[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [expandedEvidence, setExpandedEvidence] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPrinciples();
@@ -81,24 +83,17 @@ export default function PrinciplesPage() {
 
   return (
     <>
-      <Header title="원칙" />
-      <div className="p-6 space-y-6">
-        {/* Header Section */}
-        <Card>
-          <CardContent className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">
-                추출된 원칙
-              </h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                AI가 학습한 사용자의 작업 원칙과 선호도
-              </p>
-            </div>
-            <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
-              <Brain className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-            </div>
-          </CardContent>
-        </Card>
+      <Header title="Principles" />
+      <div className="p-8 space-y-6">
+        {/* Page Title */}
+        <div>
+          <h1 className="text-3xl font-semibold text-slate-900 dark:text-slate-50 font-serif">
+            Principles
+          </h1>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+            AI-learned decision-making principles from your behavior
+          </p>
+        </div>
 
         {/* Filters */}
         <Card>
@@ -147,109 +142,93 @@ export default function PrinciplesPage() {
             <CardContent className="text-center py-12">
               <Brain className="mx-auto h-12 w-12 text-slate-400" />
               <p className="mt-4 text-slate-600 dark:text-slate-400">
-                아직 추출된 원칙이 없습니다.
+                No principles learned yet.
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-4">
             {principles.map((principle) => (
-              <Card key={principle.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2">
+              <Card key={principle.id} className="p-6">
+                <div className="space-y-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CardTitle className="text-base">
-                          {principle.title}
-                        </CardTitle>
-                        <Badge variant={getCategoryVariant(principle.category)}>
-                          {getCategoryName(principle.category)}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <h3 className="text-base font-semibold text-slate-900 dark:text-slate-50">
+                        {principle.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
                         {principle.description}
                       </p>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Confidence Score */}
-                  <div className="mb-4 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-slate-500" />
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      신뢰도:
-                    </span>
-                    <span
-                      className={`text-sm font-semibold ${getConfidenceColor(
-                        principle.confidence
-                      )}`}
-                    >
-                      {(principle.confidence * 100).toFixed(0)}%
-                    </span>
+                    <Badge variant={getCategoryVariant(principle.category)}>
+                      {getCategoryName(principle.category)}
+                    </Badge>
                   </div>
 
-                  {/* Metadata */}
-                  {principle.metadata && (
-                    <div className="mb-4 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
-                        추가 정보
-                      </p>
-                      <pre className="text-xs text-slate-700 dark:text-slate-300 overflow-x-auto">
-                        {JSON.stringify(principle.metadata, null, 2)}
-                      </pre>
-                    </div>
-                  )}
+                  {/* Confidence Progress */}
+                  <Progress
+                    value={Math.round(principle.confidence * 100)}
+                    className="mt-4"
+                  />
 
-                  {/* Evidence */}
+                  {/* Evidence (Collapsible) */}
                   {principle.evidence && principle.evidence.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
-                        근거 ({principle.evidence.length})
-                      </p>
-                      <div className="space-y-2">
-                        {principle.evidence.slice(0, 3).map((ev: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className="rounded-lg border border-slate-200 bg-white p-2 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                          >
-                            {ev.text || JSON.stringify(ev)}
-                          </div>
-                        ))}
-                        {principle.evidence.length > 3 && (
-                          <p className="text-xs text-slate-500">
-                            +{principle.evidence.length - 3}개 더 보기
-                          </p>
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <button
+                        onClick={() => setExpandedEvidence(
+                          expandedEvidence === principle.id ? null : principle.id
                         )}
-                      </div>
+                        className="flex items-center gap-2 text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                      >
+                        {expandedEvidence === principle.id ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                        Evidence ({principle.evidence.length} instances)
+                      </button>
+                      {expandedEvidence === principle.id && (
+                        <div className="mt-3 space-y-2">
+                          {principle.evidence.map((ev: { text?: string }, idx: number) => (
+                            <div
+                              key={idx}
+                              className="p-3 bg-slate-50 border border-slate-200 text-sm text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
+                            >
+                              {ev.text || JSON.stringify(ev)}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
 
                   {/* Actions */}
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm">
-                      <Edit className="mr-1 h-3 w-3" />
-                      수정
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={async () => {
-                      if (confirm(`"${principle.content || principle.title}" 원칙을 삭제하시겠습니까?`)) {
-                        try {
-                          await api.deletePrinciple(principle.id);
-                          setPrinciples(prev => prev.filter(p => p.id !== principle.id));
-                        } catch (e) {
-                          alert('삭제 중 오류가 발생했습니다.');
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <p className="text-xs text-slate-500">
+                      Created: {new Date(principle.created_at).toLocaleDateString('en-US')}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm">
+                        <Edit className="mr-1 h-3 w-3" />
+                        Edit
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={async () => {
+                        if (confirm(`Delete "${principle.content || principle.title}"?`)) {
+                          try {
+                            await api.deletePrinciple(principle.id);
+                            setPrinciples(prev => prev.filter(p => p.id !== principle.id));
+                          } catch (e) {
+                            alert('Failed to delete principle.');
+                          }
                         }
-                      }
-                    }}>
-                      <Trash2 className="mr-1 h-3 w-3" />
-                      삭제
-                    </Button>
+                      }}>
+                        <Trash2 className="mr-1 h-3 w-3" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-
-                  {/* Timestamp */}
-                  <p className="mt-3 text-xs text-slate-500">
-                    생성일: {new Date(principle.created_at).toLocaleDateString('ko-KR')}
-                  </p>
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
