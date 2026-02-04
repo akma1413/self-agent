@@ -1,0 +1,75 @@
+Phase 6: Executor and Pipeline Integration
+===========================================
+
+NEW FILES CREATED:
+-----------------
+
+1. Executor System:
+   - /Users/shin/self/version1/backend/app/services/executor/__init__.py
+   - /Users/shin/self/version1/backend/app/services/executor/base.py
+   - /Users/shin/self/version1/backend/app/services/executor/notification.py
+
+2. Learner System:
+   - /Users/shin/self/version1/backend/app/services/learner/__init__.py
+   - /Users/shin/self/version1/backend/app/services/learner/feedback.py
+
+3. Pipeline Orchestration:
+   - /Users/shin/self/version1/backend/app/services/pipeline.py
+
+4. API Endpoints:
+   - /Users/shin/self/version1/backend/app/api/v1/endpoints/pipeline.py
+
+5. Documentation:
+   - /Users/shin/self/version1/backend/PHASE6_IMPLEMENTATION_SUMMARY.md
+   - /Users/shin/self/version1/backend/PHASE6_FILES.txt (this file)
+
+
+FILES MODIFIED:
+--------------
+
+1. API Router:
+   - /Users/shin/self/version1/backend/app/api/v1/__init__.py
+     (Added pipeline router registration)
+
+2. Scheduler:
+   - /Users/shin/self/version1/backend/app/services/scheduler.py
+     (Added full pipeline and weekly summary jobs)
+
+
+NEW API ENDPOINTS:
+-----------------
+
+POST   /api/v1/pipeline/run
+POST   /api/v1/pipeline/weekly-summary/{agenda_id}
+GET    /api/v1/pipeline/feedback/analysis
+GET    /api/v1/pipeline/feedback/suggestions
+
+
+VERIFICATION:
+------------
+
+All files verified with Python AST parser:
+✓ app/services/executor/base.py
+✓ app/services/executor/notification.py
+✓ app/services/pipeline.py
+✓ app/services/learner/feedback.py
+✓ app/api/v1/endpoints/pipeline.py
+✓ app/services/scheduler.py
+
+
+SCHEDULED JOBS:
+--------------
+
+1. Collection Job      - Every 2 hours
+2. Full Pipeline       - Every 6 hours
+3. Weekly Summary      - Every Monday at 9 AM
+
+
+KEY CLASSES:
+-----------
+
+- AbstractExecutor         (base class for executors)
+- NotificationExecutor     (console notifications)
+- SlackNotifier           (Slack webhook notifications)
+- Pipeline                (main orchestration class)
+- FeedbackLearner         (learning from user feedback)
