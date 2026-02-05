@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useState, use } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,23 +11,31 @@ import { api } from '@/lib/api';
 import Link from 'next/link';
 import type { Action, Report, ReportAnalysisBenefit } from '@/lib/types';
 
-export default function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const router = useRouter();
+export default function ReportDetailPage() {
+  const params = useParams<{ id?: string | string[] }>();
+  const reportId = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const [report, setReport] = useState<Report | null>(null);
   const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!reportId) {
+      setReport(null);
+      setActions([]);
+      setLoading(false);
+      return;
+    }
+
     async function fetchData() {
+      setLoading(true);
       try {
-        const reportData = await api.getReport(resolvedParams.id);
+        const reportData = await api.getReport(reportId);
         setReport(reportData);
 
         // Fetch related actions
         const allActions = await api.getActions();
         const relatedActions = allActions.filter(
-          (action) => action.report_id === resolvedParams.id
+          (action) => action.report_id === reportId
         );
         setActions(relatedActions);
       } catch (error) {
@@ -38,11 +46,15 @@ export default function ReportDetailPage({ params }: { params: Promise<{ id: str
     }
 
     fetchData();
-  }, [resolvedParams.id]);
+  }, [reportId]);
 
   const handleReview = async () => {
+    if (!reportId) {
+      return;
+    }
+
     try {
-      await api.reviewReport(resolvedParams.id);
+      await api.reviewReport(reportId);
       setReport((current) =>
         current ? { ...current, status: 'reviewed' } : current
       );
