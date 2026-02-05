@@ -24,7 +24,7 @@ class QualityScorer:
     - Engagement (10%): Social signals (likes, retweets, stars)
     """
 
-    DEFAULT_THRESHOLD = 50  # Items below this are filtered
+    DEFAULT_THRESHOLD = 20  # Lowered to allow more content through
 
     DEFAULT_REPUTATION = {
         "github": 80,

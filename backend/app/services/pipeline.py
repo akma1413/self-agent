@@ -171,10 +171,11 @@ class Pipeline:
 
         for result in process_results:
             analysis = result.get("analysis", {})
-            recommendation = analysis.get("recommendation")
+            # Analyzer returns 'verdict' field with values: ADOPT, CONSIDER, SKIP
+            verdict = analysis.get("verdict", "").upper()
 
-            # Only create reports for recommended items
-            if recommendation in ["recommend", "consider"]:
+            # Create reports for ADOPT and CONSIDER verdicts
+            if verdict in ["ADOPT", "CONSIDER"]:
                 await self.reporter.generate_new_tool_report(
                     agenda_id=agenda_id,
                     tool_name=result.get("item_title", "Unknown"),
@@ -182,6 +183,8 @@ class Pipeline:
                     source_item={"id": result.get("item_id"), "url": None},
                 )
                 reports_created += 1
+            elif verdict == "SKIP":
+                logger.info(f"Skipped: {result.get('item_title')} - {analysis.get('summary', 'No reason')}")
 
         return reports_created
 

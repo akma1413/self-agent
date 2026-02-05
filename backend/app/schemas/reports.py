@@ -53,7 +53,7 @@ class ActionResponse(BaseModel):
     description: Optional[str]
     priority: str
     status: str
-    payload: Optional[dict]
+    payload: Optional[dict] = None
     confirmed_at: Optional[datetime]
     executed_at: Optional[datetime]
     created_at: datetime

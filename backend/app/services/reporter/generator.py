@@ -220,7 +220,10 @@ class ReportGenerator:
             "title": title,
             "description": description,
             "priority": priority,
-            "payload": payload,
         }
+
+        # Only include payload if it exists (column may not be present in older schemas)
+        if payload is not None:
+            action_data["payload"] = payload
 
         self.client.table("actions").insert(action_data).execute()

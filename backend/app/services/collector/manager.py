@@ -5,6 +5,9 @@ from app.services.collector.web import WebCollector
 from app.services.collector.github import GitHubCollector
 from app.services.collector.twitter import TwitterCollector
 from app.core.database import get_supabase_client
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 COLLECTOR_REGISTRY: Dict[str, Type[AbstractCollector]] = {
@@ -97,8 +100,8 @@ class CollectorManager:
                     on_conflict="source_id,external_id",
                 ).execute()
                 saved += 1
-            except Exception:
-                pass  # Skip duplicates
+            except Exception as e:
+                logger.warning(f"Failed to save item {item.external_id}: {e}")
 
         # Update last_collected_at
         from datetime import datetime
