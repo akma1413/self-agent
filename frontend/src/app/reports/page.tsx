@@ -8,9 +8,10 @@ import { Button } from '@/components/ui/button';
 import { FileText, Clock } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import type { Report } from '@/lib/types';
 
 export default function ReportsPage() {
-  const [reports, setReports] = useState<any[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 

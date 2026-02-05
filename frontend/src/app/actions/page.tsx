@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,20 +10,17 @@ import { FilterTabs } from '@/components/ui/filter-tabs';
 import { AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { ActionGuide } from '@/components/ActionGuide';
+import type { Action } from '@/lib/types';
 
 export default function ActionsPage() {
-  const [actions, setActions] = useState<any[]>([]);
+  const [actions, setActions] = useState<Action[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
-  const [selectedAction, setSelectedAction] = useState<any>(null);
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [comment, setComment] = useState('');
-  const [confirmedAction, setConfirmedAction] = useState<any>(null);
+  const [confirmedAction, setConfirmedAction] = useState<Action | null>(null);
 
-  useEffect(() => {
-    fetchActions();
-  }, [filter]);
-
-  const fetchActions = async () => {
+  const fetchActions = useCallback(async () => {
     try {
       const data =
         filter === 'all' ? await api.getActions() : await api.getActions(filter);
@@ -33,9 +30,16 @@ export default function ActionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
 
-  const handleConfirm = async (actionId: string) => {
+  useEffect(() => {
+    fetchActions();
+  }, [fetchActions]);
+
+  const handleConfirm = async (actionId?: string) => {
+    if (!actionId) {
+      return;
+    }
     try {
       await api.confirmAction(actionId, comment);
       // Show action guide instead of alert
@@ -49,7 +53,10 @@ export default function ActionsPage() {
     }
   };
 
-  const handleReject = async (actionId: string) => {
+  const handleReject = async (actionId?: string) => {
+    if (!actionId) {
+      return;
+    }
     try {
       await api.rejectAction(actionId, comment);
       alert('액션이 거부되었습니다.');
@@ -291,7 +298,7 @@ export default function ActionsPage() {
               <div>
                 <label className="text-xs text-slate-500 dark:text-slate-400">Execution Guide</label>
                 <div className="mt-2 space-y-2">
-                  {selectedAction.payload.steps?.map((step: string, idx: number) => (
+                  {selectedAction.payload?.steps?.map((step: string, idx: number) => (
                     <div key={idx} className="flex gap-3">
                       <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
                         {idx + 1}.

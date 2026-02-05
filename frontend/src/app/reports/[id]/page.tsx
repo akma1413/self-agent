@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -9,23 +9,25 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, CheckCircle, Archive } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import type { Action, Report, ReportAnalysisBenefit } from '@/lib/types';
 
-export default function ReportDetailPage({ params }: { params: { id: string } }) {
+export default function ReportDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const router = useRouter();
-  const [report, setReport] = useState<any>(null);
-  const [actions, setActions] = useState<any[]>([]);
+  const [report, setReport] = useState<Report | null>(null);
+  const [actions, setActions] = useState<Action[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const reportData = await api.getReport(params.id);
+        const reportData = await api.getReport(resolvedParams.id);
         setReport(reportData);
 
         // Fetch related actions
         const allActions = await api.getActions();
         const relatedActions = allActions.filter(
-          (action: any) => action.report_id === params.id
+          (action) => action.report_id === resolvedParams.id
         );
         setActions(relatedActions);
       } catch (error) {
@@ -36,12 +38,14 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
     }
 
     fetchData();
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
   const handleReview = async () => {
     try {
-      await api.reviewReport(params.id);
-      setReport({ ...report, status: 'reviewed' });
+      await api.reviewReport(resolvedParams.id);
+      setReport((current) =>
+        current ? { ...current, status: 'reviewed' } : current
+      );
       alert('리포트를 검토 완료했습니다.');
     } catch (error) {
       console.error('Failed to review report:', error);
@@ -224,7 +228,7 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {report.analysis.benefits.map((benefit: any, idx: number) => (
+                    {report.analysis.benefits.map((benefit: ReportAnalysisBenefit, idx: number) => (
                       <div
                         key={idx}
                         className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800"
@@ -464,9 +468,10 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
                     onClick={async () => {
                       if (confirm('이 리포트를 스킵하시겠습니까?')) {
                         try {
-                          await api.archiveReport(params.id);
+                          await api.archiveReport(resolvedParams.id);
                           router.push('/reports');
-                        } catch (e) {
+                        } catch (error) {
+                          console.error('Failed to archive report:', error);
                           alert('스킵 처리 중 오류가 발생했습니다.');
                         }
                       }
@@ -481,9 +486,10 @@ export default function ReportDetailPage({ params }: { params: { id: string } })
                     onClick={async () => {
                       if (confirm('이 리포트를 채택하시겠습니까?')) {
                         try {
-                          await api.reviewReport(params.id);
+                          await api.reviewReport(resolvedParams.id);
                           router.push('/reports');
-                        } catch (e) {
+                        } catch (error) {
+                          console.error('Failed to review report:', error);
                           alert('채택 처리 중 오류가 발생했습니다.');
                         }
                       }
