@@ -63,6 +63,16 @@ export default function Home() {
     }
   };
 
+  const handleRunPipeline = async () => {
+    try {
+      await api.runPipeline(true);
+      alert('파이프라인이 백그라운드에서 실행되었습니다.');
+    } catch (error) {
+      console.error('Failed to run pipeline:', error);
+      alert('파이프라인 실행에 실패했습니다.');
+    }
+  };
+
   if (loading) {
     return (
       <>
@@ -120,6 +130,10 @@ export default function Home() {
               <Button onClick={handleTriggerProcess}>
                 <Play className="mr-2 h-4 w-4" />
                 분석 프로세스 시작
+              </Button>
+              <Button onClick={handleRunPipeline} variant="secondary">
+                <Play className="mr-2 h-4 w-4" />
+                파이프라인 실행
               </Button>
               <Link href="/reports">
                 <Button variant="secondary">

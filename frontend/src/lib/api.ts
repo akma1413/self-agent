@@ -1,6 +1,7 @@
 import type {
   Action,
   Agenda,
+  PipelineRunResult,
   Principle,
   ProcessResult,
   Report,
@@ -71,4 +72,11 @@ export const api = {
     fetchAPI<ProcessResult>('/process/vibecoding/process', { method: 'POST' }),
   getWeeklySummary: () =>
     fetchAPI<WeeklySummary>('/process/vibecoding/weekly-summary'),
+
+  // Pipeline
+  runPipeline: (runInBackground: boolean = true) =>
+    fetchAPI<PipelineRunResult>('/pipeline/run', {
+      method: 'POST',
+      body: JSON.stringify({ run_in_background: runInBackground }),
+    }),
 };

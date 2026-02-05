@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     rapidapi_key: str | None = None
 
     # Scheduler
-    scheduler_enabled: bool = True
+    scheduler_enabled: bool = False
 
     @property
     def is_production(self) -> bool:
