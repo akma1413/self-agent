@@ -7,5 +7,5 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
-| #1237 | 12:00 AM | 🟣 | Editorial × Data-Driven Design System Implemented | ~594 |
+| #1246 | 12:07 AM | ✅ | UI Improvement Spec Archived | ~373 |
 </claude-mem-context>

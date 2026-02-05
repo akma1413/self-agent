@@ -3,13 +3,16 @@
 ## Overview
 - **Plan**: .dev/specs/ui-improvement/PLAN.md
 - **Created**: 2026-02-04T14:35:00Z
-- **Status**: in_progress
+- **Status**: completed
+- **Merged**: 2026-02-05T00:08:00Z
 
 ## Work Units Status
 
 | Unit | Session | Status | Branch | PR | Started | Completed |
 |------|---------|--------|--------|----|---------| ----------|
 | unit-design | Session-1738676100 | completed | feat/ui-improvement | - | 2026-02-04T14:35:00Z | 2026-02-04T14:55:00Z |
+| unit-components | Session-1738681300 | completed | feat/ui-improvement-v2 | #1 | 2026-02-04T23:55:00Z | 2026-02-05T00:05:00Z |
+| unit-pages | Session-1738681300 | completed | feat/ui-improvement-v2 | #1 | 2026-02-04T23:55:00Z | 2026-02-05T00:05:00Z |
 
 ## Dependencies
 - unit-design: (none) - can start immediately
@@ -46,3 +49,5 @@
 ## Notes
 - [2026-02-04T14:35:00Z] Worktree created, starting with Pencil design work
 - [2026-02-04T14:55:00Z] All 4 TODOs completed, build successful
+- [2026-02-05T00:05:00Z] PR #1 created with Editorial × Data-Driven design system
+- [2026-02-05T00:08:00Z] PR #1 merged to main, spec completed
