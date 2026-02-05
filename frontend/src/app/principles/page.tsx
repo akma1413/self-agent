@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,31 +8,32 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Brain, Edit, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { api } from '@/lib/api';
+import type { Principle } from '@/lib/types';
 
 export default function PrinciplesPage() {
-  const [principles, setPrinciples] = useState<any[]>([]);
+  const [principles, setPrinciples] = useState<Principle[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [expandedEvidence, setExpandedEvidence] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchPrinciples();
-  }, [filter]);
-
-  const fetchPrinciples = async () => {
+  const fetchPrinciples = useCallback(async () => {
     try {
       const data = await api.getPrinciples();
       if (filter === 'all') {
         setPrinciples(data);
       } else {
-        setPrinciples(data.filter((p: any) => p.category === filter));
+        setPrinciples(data.filter((p) => p.category === filter));
       }
     } catch (error) {
       console.error('Failed to fetch principles:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchPrinciples();
+  }, [fetchPrinciples]);
 
   const getCategoryVariant = (category: string) => {
     switch (category) {
@@ -62,12 +63,6 @@ export default function PrinciplesPage() {
       default:
         return category;
     }
-  };
-
-  const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return 'text-green-600 dark:text-green-400';
-    if (confidence >= 0.6) return 'text-amber-600 dark:text-amber-400';
-    return 'text-red-600 dark:text-red-400';
   };
 
   if (loading) {
@@ -218,7 +213,8 @@ export default function PrinciplesPage() {
                           try {
                             await api.deletePrinciple(principle.id);
                             setPrinciples(prev => prev.filter(p => p.id !== principle.id));
-                          } catch (e) {
+                          } catch (error) {
+                            console.error('Failed to delete principle:', error);
                             alert('Failed to delete principle.');
                           }
                         }

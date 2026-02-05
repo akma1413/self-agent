@@ -1,3 +1,13 @@
+import type {
+  Action,
+  Agenda,
+  PipelineRunResult,
+  Principle,
+  ProcessResult,
+  Report,
+  WeeklySummary,
+} from './types';
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
@@ -18,39 +28,55 @@ async function fetchAPI<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   // Agendas
-  getAgendas: () => fetchAPI<any[]>('/agendas'),
-  getAgenda: (id: string) => fetchAPI<any>(`/agendas/${id}`),
+  getAgendas: () => fetchAPI<Agenda[]>('/agendas'),
+  getAgenda: (id: string) => fetchAPI<Agenda>(`/agendas/${id}`),
 
   // Reports
-  getReports: (status?: string) => fetchAPI<any[]>(`/reports${status ? `?status=${status}` : ''}`),
-  getPendingReports: () => fetchAPI<any[]>('/reports/pending'),
-  getReport: (id: string) => fetchAPI<any>(`/reports/${id}`),
-  reviewReport: (id: string) => fetchAPI<any>(`/reports/${id}/review`, { method: 'POST' }),
-  archiveReport: (id: string) => fetchAPI<any>(`/reports/${id}/archive`, { method: 'POST' }),
+  getReports: (status?: string) =>
+    fetchAPI<Report[]>(`/reports${status ? `?status=${status}` : ''}`),
+  getPendingReports: () => fetchAPI<Report[]>('/reports/pending'),
+  getReport: (id: string) => fetchAPI<Report>(`/reports/${id}`),
+  reviewReport: (id: string) =>
+    fetchAPI<Report>(`/reports/${id}/review`, { method: 'POST' }),
+  archiveReport: (id: string) =>
+    fetchAPI<Report>(`/reports/${id}/archive`, { method: 'POST' }),
 
   // Actions
-  getActions: (status?: string) => fetchAPI<any[]>(`/actions${status ? `?status=${status}` : ''}`),
-  getPendingActions: () => fetchAPI<any[]>('/actions/pending'),
+  getActions: (status?: string) =>
+    fetchAPI<Action[]>(`/actions${status ? `?status=${status}` : ''}`),
+  getPendingActions: () => fetchAPI<Action[]>('/actions/pending'),
   confirmAction: (id: string, comment?: string) =>
-    fetchAPI<any>(`/actions/${id}/confirm`, {
+    fetchAPI<Action>(`/actions/${id}/confirm`, {
       method: 'POST',
       body: JSON.stringify({ comment }),
     }),
   rejectAction: (id: string, comment?: string) =>
-    fetchAPI<any>(`/actions/${id}/reject`, {
+    fetchAPI<Action>(`/actions/${id}/reject`, {
       method: 'POST',
       body: JSON.stringify({ comment }),
     }),
 
   // Principles
-  getPrinciples: () => fetchAPI<any[]>('/principles'),
-  getPrinciple: (id: string) => fetchAPI<any>(`/principles/${id}`),
+  getPrinciples: () => fetchAPI<Principle[]>('/principles'),
+  getPrinciple: (id: string) => fetchAPI<Principle>(`/principles/${id}`),
   updatePrinciple: (id: string, data: { content?: string; category?: string; confidence_score?: number }) =>
-    fetchAPI<any>(`/principles/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+    fetchAPI<Principle>(`/principles/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
   deletePrinciple: (id: string) =>
-    fetchAPI<any>(`/principles/${id}`, { method: 'DELETE' }),
+    fetchAPI<ProcessResult>(`/principles/${id}`, { method: 'DELETE' }),
 
   // Process
-  triggerProcess: () => fetchAPI<any>('/process/vibecoding/process', { method: 'POST' }),
-  getWeeklySummary: () => fetchAPI<any>('/process/vibecoding/weekly-summary'),
+  triggerProcess: () =>
+    fetchAPI<ProcessResult>('/process/vibecoding/process', { method: 'POST' }),
+  getWeeklySummary: () =>
+    fetchAPI<WeeklySummary>('/process/vibecoding/weekly-summary'),
+
+  // Pipeline
+  runPipeline: (runInBackground: boolean = true) =>
+    fetchAPI<PipelineRunResult>('/pipeline/run', {
+      method: 'POST',
+      body: JSON.stringify({ run_in_background: runInBackground }),
+    }),
 };

@@ -6,9 +6,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { MetricCard } from '@/components/ui/metric-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { FileText, CheckSquare, Brain, Play, TrendingUp } from 'lucide-react';
+import { FileText, CheckSquare, Play, TrendingUp } from 'lucide-react';
 import { api } from '@/lib/api';
 import Link from 'next/link';
+import type { Report } from '@/lib/types';
 
 interface SummaryData {
   pendingReports: number;
@@ -22,7 +23,7 @@ export default function Home() {
     pendingActions: 0,
     activePrinciples: 0,
   });
-  const [recentReports, setRecentReports] = useState<any[]>([]);
+  const [recentReports, setRecentReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,6 +60,16 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to trigger process:', error);
       alert('프로세스 시작에 실패했습니다.');
+    }
+  };
+
+  const handleRunPipeline = async () => {
+    try {
+      await api.runPipeline(true);
+      alert('파이프라인이 백그라운드에서 실행되었습니다.');
+    } catch (error) {
+      console.error('Failed to run pipeline:', error);
+      alert('파이프라인 실행에 실패했습니다.');
     }
   };
 
@@ -119,6 +130,10 @@ export default function Home() {
               <Button onClick={handleTriggerProcess}>
                 <Play className="mr-2 h-4 w-4" />
                 분석 프로세스 시작
+              </Button>
+              <Button onClick={handleRunPipeline} variant="secondary">
+                <Play className="mr-2 h-4 w-4" />
+                파이프라인 실행
               </Button>
               <Link href="/reports">
                 <Button variant="secondary">
