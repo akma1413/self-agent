@@ -56,3 +56,9 @@ supabase/.temp/
 # Misc
 *.bak
 *.tmp
+
+# Claude Code auto-generated
+**/CLAUDE.md
+.claude/
+.omc/
+**/.omc/
